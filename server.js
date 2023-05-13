@@ -1,18 +1,25 @@
 require('dotenv').config();
 const express = require('express');
 const app = express();
+const path = require('path');
 const cors = require('cors');
 
 const rootRouter = require('./routes/root');
 
 app.use(cors());
+app.use(express.static(path.join(__dirname, 'public')));
+
+
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 app.use("/", rootRouter);
 
+app.use("/*", (req, res) => {
+    res.status(200).sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
-app.get("*", (req, res) => {
+app.use("*", (req, res) => {
     res.sendStatus(404);
 })
 
