@@ -1,16 +1,22 @@
 const dbconnection = require('../database/connect');
-const bcrypt = require('bcrypt');
+const crypto = require('crypto');
 
-async function urlSafeShortUrl(longUrl, saltCount) {
-    const hash = await bcrypt.hash(longUrl, saltCount);
-    const urlSafeHash = hash.replace(/\//g, "_b").replace(/\+/g, "_p");
-    return urlSafeHash;
+const VALID_URL_REGEX = /^https?:\/\//;
+
+async function urlSafeShortUrl(length) {
+    const buffer = crypto.randomBytes(length).toString('base64url');
+    return buffer;
 };
 
 
 const createShortUrl = async (req, res) => {
     const { longUrl } = req.body;
     console.log(req.body);
+    if (!longUrl) return res.sendStatus(422);
+    const isValidUrl = VALID_URL_REGEX.test(longUrl);
+    if (!isValidUrl) return res.sendStatus(400);
+
+
     try {
         const client = await dbconnection();
         const results = await client.query({
@@ -20,7 +26,7 @@ const createShortUrl = async (req, res) => {
         if (results && results.rowCount > 0) return res.sendStatus(409);
 
         //In no duplicates found create a new short url
-        const shortUrl = await urlSafeShortUrl(longUrl, 1);
+        const shortUrl = await urlSafeShortUrl(16);
 
         await client.query({
             text: 'INSERT INTO "urls"("short_url","long_url") VALUES($1,$2)',
@@ -42,7 +48,6 @@ const openShortUrlWebsite = async (req, res) => {
     const { shortUrl } = req.params;
     console.log();
     if (!shortUrl) return res.sendStatus(400);
-    console.log("Short URL: " + shortUrl);
     try {
         const client = await dbconnection();
 
@@ -54,17 +59,32 @@ const openShortUrlWebsite = async (req, res) => {
         const data = rows[0];
 
         if (rows.length <= 0 || Object.keys(data).length <= 0) return res.sendStatus(404);
-        const website_url = data.long_url;
         client.release();
-        return res.status(302).redirect(website_url);
+        return res.status(301).redirect(data.long_url);
     } catch (error) {
         if (error) {
             console.log(error.message);
             res.status(500).json({ error });
         }
     }
-}
+};
+
+const deleteUrlAfter24Hours = async (req, res) => {
+    try {
+        const client = await dbconnection();
+        await client.query('DELETE FROM "urls" WHERE "expiresin" < NOW()');
+        res.sendStatus(204);
+    } catch (error) {
+        if (error) {
+            console.log("Error deleting urls after 24 hours");
+            console.log(error.message);
+        }
+    }
+};
+
+
 module.exports = {
     createShortUrl,
-    openShortUrlWebsite
+    openShortUrlWebsite,
+    deleteUrlAfter24Hours
 }
