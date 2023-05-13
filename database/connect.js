@@ -17,6 +17,7 @@ async function connectDB() {
     } catch (error) {
         if (error) {
             console.error(`Error connecting to database: ${error.message}`);
+            console.log(error)
             throw new Error(error);
         }
     }
