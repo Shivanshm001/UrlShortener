@@ -3,7 +3,7 @@ const crypto = require('crypto');
 const VALID_URL_REGEX = /^https?:\/\//;
 
 function urlSafeShortUrl(length) {
-    const buffer = crypto.randomBytes(length).toString('base64url');
+    const buffer = crypto.randomBytes(length).toString('hex');
     return buffer;
 };
 
@@ -37,6 +37,7 @@ const createShortUrl = async (req, res) => {
     } catch (error) {
         if (error) {
             console.log(error?.message);
+            console.log(error);
             res.status(500).json({ error });
         }
     }
