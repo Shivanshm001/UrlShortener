@@ -6,7 +6,7 @@ const pool = new Pool({
     // database: process.env.DB_NAME,
     // user: process.env.DB_USERNAME,
     // password: process.env.DB_PASSWORD,
-    connectionString: process.env.DB_INTERNAL_URL,
+    connectionString: process.env.DB_EXTERNAL_URL,
 })
 
 async function connectDB() {
