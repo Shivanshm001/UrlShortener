@@ -1,9 +1,8 @@
 const dbconnection = require('../database/connect');
 const crypto = require('crypto');
-
 const VALID_URL_REGEX = /^https?:\/\//;
 
-async function urlSafeShortUrl(length) {
+function urlSafeShortUrl(length) {
     const buffer = crypto.randomBytes(length).toString('base64url');
     return buffer;
 };
@@ -26,7 +25,7 @@ const createShortUrl = async (req, res) => {
         if (results && results.rowCount > 0) return res.sendStatus(409);
 
         //In no duplicates found create a new short url
-        const shortUrl = await urlSafeShortUrl(16);
+        const shortUrl = urlSafeShortUrl(16);
 
         await client.query({
             text: 'INSERT INTO "urls"("short_url","long_url") VALUES($1,$2)',
