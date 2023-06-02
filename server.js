@@ -19,10 +19,9 @@ app.use("/*", (req, res) => {
     res.status(200).sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-app.use("*", (req, res) => {
-    res.sendStatus(404);
+app.use((req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 })
-
 const PORT = process.env.PORT || process.env.LOCAL_PORT;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
